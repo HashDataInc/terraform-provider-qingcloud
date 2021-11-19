@@ -188,6 +188,15 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		isDelete, err := isInstanceDeletedWrapper(d.Id(), meta.(*QingCloudClient).instance)
+		if err != nil {
+			return err
+		}
+		if isDelete {
+			return resourceQingcloudInstanceCreate(d, meta)
+		}
+	}
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
@@ -255,6 +264,15 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		isDelete, err := isInstanceDeletedWrapper(d.Id(), meta.(*QingCloudClient).instance)
+		if err != nil {
+			return err
+		}
+		if isDelete {
+			return resourceQingcloudInstanceCreate(d, meta)
+		}
+	}
 	d.Partial(true)
 	if err := waitInstanceLease(d, meta); err != nil {
 		return err
@@ -308,6 +326,13 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	clt := meta.(*QingCloudClient).instance
+	if isDelete, err := isInstanceDeletedWrapper(d.Id(), clt); err != nil || isDelete {
+		if err != nil {
+			return err
+		}
+		d.SetId("")
+		return nil
+	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	var err error
