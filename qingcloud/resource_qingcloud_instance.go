@@ -65,10 +65,10 @@ func resourceQingcloudInstance() *schema.Resource {
 				Default:      1024,
 			},
 			resourceInstanceClass: {
-				Type:         schema.TypeInt,
-				ForceNew:     true,
-				Optional:     true,
-				Default:      0,
+				Type:     schema.TypeInt,
+				ForceNew: true,
+				Optional: true,
+				Default:  0,
 			},
 			resourceInstanceManagedVxnetID: {
 				Type:     schema.TypeString,
@@ -188,15 +188,6 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	if !d.IsNewResource() {
-		isDelete, err := isInstanceDeletedWrapper(d.Id(), meta.(*QingCloudClient).instance)
-		if err != nil {
-			return err
-		}
-		if isDelete {
-			return resourceQingcloudInstanceCreate(d, meta)
-		}
-	}
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
